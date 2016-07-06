@@ -1,0 +1,18 @@
+Package: hcphb
+Title: Analysis of FWS/NMFS HCP Handbook Draft Revisions
+Version: 0.1.0
+Authors@R: person("Jacob", "Malcom", email = "jmalcom@defenders.org", role = c("aut", "cre"))
+Description: In June, 2016, the U.S. Fish and Wildlife Service and National 
+    Marine Fisheries Service announced the release of a significant revision to
+    their joint Habitat Conservation Planning Handbook. The current handbook 
+    (as of June, 2016) was drafted in 1996. This packages wraps an analysis 
+    comparing the current and draft revised handbooks.
+Depends:
+    R (>= 3.2.3)
+License: BSD_2_clause + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 5.0.1
+Imports:
+    pdftools,
+    stringr
