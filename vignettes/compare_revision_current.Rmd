@@ -70,14 +70,16 @@ for(i in names(revch1_allcur_mins)) {
 }
 mins_df <- bind_rows(mins_df)
 mins_df$rev_ch <- rep("ch1", length(mins_df$pos))
+mins_df$rev_idx <- seq(1:length(mins_df$pos))
 plot(mins_df$val,
+     pch = 19,
      xlab = "Match No. (REV sequential)",
      ylab = "Edit distance (osa)",
      main = "")
 abline(h = 0.25, col = substr(viridis(3), 1, 7)[2])
-# ggplot(data = mins_df, aes(x = rev_sent, y = val)) +
-#   geom_point() +
-#   facet_wrap(~cur_ch, ncol=5)
+ggplot(data = mins_df, aes(x = rev_idx, y = val)) +
+  geom_point(alpha = 0.2, size = 2) # +
+  # facet_wrap(~cur_ch, ncol=5)
 ```
 
 
