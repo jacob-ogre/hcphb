@@ -3,3 +3,4 @@
 export(get_max_dist)
 export(get_min_dist)
 export(get_min_dists)
+export(summary_dists)

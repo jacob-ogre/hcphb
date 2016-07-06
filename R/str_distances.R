@@ -40,8 +40,9 @@ get_max_dist <- function(x, y) {
 #' get_min_dist(mat=amat, x=2)
 #' }
 get_min_dist <- function(mat, x) {
+  pos <- which(mat[x, ] == min(mat[x, ]))
   val <- mat[x, which(mat[x, ] == min(mat[x, ]))]
-  return(val)
+  return(list(pos=pos, val=val))
 }
 
 #' Get the minimum edit distance for rows in a matrix
@@ -60,45 +61,8 @@ get_min_dists <- function(mat) {
   return(res)
 }
 
-#' Get the maximum edit ratio for a row in a matrix
+#' Summarize a vector of edit distances
 #'
-#' We often want to know which string from among a set of strings is the most-
-#' similar. \link[stringdist]{stringdistmatrix} provides a matrix of distances
-#' between one or two vectors of strings. This function returns the minimum 
-#' distance for one row (x) of the matrix.
-#' 
-#' @param mat A matrix of edit distances
-#' @param x The row number for which to find the minimum edit distance
-#' @return The minimum edit distance between the string corresponding to row x
-#' @export
-#' @examples
-#' \dontrun{
-#' get_min_dist(mat=amat, x=2)
-#' }
-get_min_dist <- function(mat, x) {
-  val <- mat[x, which(mat[x, ] == min(mat[x, ]))]
-  return(val)
-}
-
-#' Get the minimum edit distance for rows in a matrix
-#'
-#' Applys \link{get_min_dist} over all rows of matrix \code{mat}
-#' 
-#' @param mat A matrix of edit distances
-#' @return The minimum edit distance for each row of matrix mat
-#' @export
-#' @examples
-#' \dontrun{
-#' get_min_dist(mat=amat, x=2)
-#' }
-get_min_dists <- function(mat) {
-  res <- lapply(1:length(mat[,1]), FUN = get_min_dists, mat = mat)
-  return(res)
-}
-
-rox-#' Summarize a vector of edit distances
-#'
-#' More detailed description of the function
 #' @param x A vector of edit distances
 #' @return A list with N, mean, median, and sd.
 #' @seealso if any see alsos

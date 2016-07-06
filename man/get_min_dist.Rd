@@ -5,21 +5,13 @@
 \title{Get the minimum edit distance for a row in a matrix}
 \usage{
 get_min_dist(mat, x)
-
-get_min_dist(mat, x)
 }
 \arguments{
 \item{mat}{A matrix of edit distances}
 
 \item{x}{The row number for which to find the minimum edit distance}
-
-\item{mat}{A matrix of edit distances}
-
-\item{x}{The row number for which to find the minimum edit distance}
 }
 \value{
-The minimum edit distance between the string corresponding to row x
-
 The minimum edit distance between the string corresponding to row x
 }
 \description{
@@ -27,16 +19,8 @@ We often want to know which string from among a set of strings is the most-
 similar. \link[stringdist]{stringdistmatrix} provides a matrix of distances
 between one or two vectors of strings. This function returns the minimum 
 distance for one row (x) of the matrix.
-
-We often want to know which string from among a set of strings is the most-
-similar. \link[stringdist]{stringdistmatrix} provides a matrix of distances
-between one or two vectors of strings. This function returns the minimum 
-distance for one row (x) of the matrix.
 }
 \examples{
-\dontrun{
-get_min_dist(mat=amat, x=2)
-}
 \dontrun{
 get_min_dist(mat=amat, x=2)
 }

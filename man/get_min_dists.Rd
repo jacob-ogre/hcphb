@@ -5,28 +5,17 @@
 \title{Get the minimum edit distance for rows in a matrix}
 \usage{
 get_min_dists(mat)
-
-get_min_dists(mat)
 }
 \arguments{
-\item{mat}{A matrix of edit distances}
-
 \item{mat}{A matrix of edit distances}
 }
 \value{
 The minimum edit distance for each row of matrix mat
-
-The minimum edit distance for each row of matrix mat
 }
 \description{
 Applys \link{get_min_dist} over all rows of matrix \code{mat}
-
-Applys \link{get_min_dist} over all rows of matrix \code{mat}
 }
 \examples{
-\dontrun{
-get_min_dist(mat=amat, x=2)
-}
 \dontrun{
 get_min_dist(mat=amat, x=2)
 }
