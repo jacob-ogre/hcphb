@@ -1,0 +1,57 @@
+---
+title: "Habitat Conservation Planning Handbook: Old vs. New"
+author: "Jacob Malcom, Defenders of Wildlife"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{Habitat Conservation Planning Handbook\: Old vs. New}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+library(hcphb)
+library(stringdist)
+
+data("hcp_rev_sent")
+data("hcp_cur_sent")
+
+hcp_cur <- hcp_cur_sent
+hcp_rev <- hcp_rev_sent
+```
+
+## Habitat Conservation Planning Handbook: Old vs. New
+
+Habitat Conservation Plans (HCPs) are a conservation tool enabled by [section 10(a)(1)(B)](https://www.fws.gov/endangered/what-we-do/hcp-overview.html) of the [U.S. Endangered Species Act (ESA)](https://www.fws.gov/endangered/laws-policies/). In return for taking actions that will benefit ESA-listed species, non-federal entities with an HCP receive an [Incidental Take Permit (ITP)](https://www.fws.gov/endangered/esa-library/pdf/HCPBK1.PDF) that allows such species to be harmed. The U.S. Fish and Wildlife Service (Dept. of the Interior) and National Marine Fisheries Service (Dept. of Commerce) administer the HCP programs. In 1996, the Services finalized their Habitat Conservation Planning Handbook (Handbook), which is used to guide the development of HCPs. In June, 2016, the Services issued a notice in the _Federal Register_ that they were revising the Handbook and [released the draft](https://www.regulations.gov/contentStreamer?documentId=FWS-HQ-ES-2016-0004-0002&disposition=attachment&contentType=pdf) for public comment. At 391 pages for the revision and 311 pages in the original (current), trying to determine all of the proposed changes could be rather time-consuming. To aid in the review process, we undertook some basic analyses of the two documents. In the following sections we exclude the tables of contents
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))

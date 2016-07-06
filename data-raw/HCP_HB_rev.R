@@ -8,6 +8,7 @@
 
 rev <- pdftools::pdf_text("data-raw/HCP_handbook_rev_draft_28Jun2016.pdf")
 length(rev)
+
 main <- rev[13:length(rev)]
 toc <- rev[1:12]
 execsum <- rev[13:14]
@@ -61,6 +62,9 @@ hcp_rev_sentences <- lapply(hcp_rev_sentences,
                             replacement = " ")
 hcp_rev_sent <- hcp_rev_sentences
 
+hcp_rev_all <- rev
+
+devtools::use_data(hcp_rev_all, overwrite = TRUE)
 devtools::use_data(hcp_rev_foc, overwrite = TRUE)
 devtools::use_data(hcp_rev_sent, overwrite = TRUE)
 

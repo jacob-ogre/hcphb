@@ -16,3 +16,6 @@ RoxygenNote: 5.0.1
 Imports:
     pdftools,
     stringr
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
