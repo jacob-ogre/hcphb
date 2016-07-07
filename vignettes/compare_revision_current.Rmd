@@ -56,29 +56,9 @@ We tokenized the documents using `Maxent_Sent_Token_Annotator` from `openNLP`, w
 ```{r, cache=TRUE}
 ch1_dists <- lapply(hcp_cur, FUN = stringdistmatrix, b = hcp_rev$ch1)
 ch1_maxes <- lapply(hcp_cur, FUN = get_max_dist, hcp_rev$ch1)
-mins_df <- lapply(hcp_cur, 
-                  FUN = one_vs_all_dists, 
-                  one_ch = hcp_rev, 
-                  ch_name = "ch1")
-# ch1_ratio <- list()
-# for(i in names(ch1_dists)) {
-#   ch1_ratio[[i]] <- ch1_dists[[i]] / ch1_maxes[[i]]
-# }
-# revch1_allcur_mins <- lapply(ch1_ratio, FUN = get_min_dists)
-# mins_df <- list()
-# for(i in names(revch1_allcur_mins)) {
-#   mins_df[[i]] <- bind_rows(revch1_allcur_mins[[i]]) 
-#   mins_df[[i]]$cur_ch <- i
-#   n_reps <- lapply(revch1_allcur_mins[[i]], 
-#                    FUN = function(x) length(x$pos))
-#   sents <- seq(1:length(n_reps))
-#   n_sents <- list()
-#   for(j in 1:length(sents)) n_sents[[j]] <- rep(sents[j], n_reps[j])
-#   mins_df[[i]]$rev_sent <- unlist(n_sents)
-# }
-# mins_df <- bind_rows(mins_df)
-# mins_df$rev_ch <- rep("ch1", length(mins_df$pos))
-# mins_df$rev_idx <- seq(1:length(mins_df$pos))
+ch1_ratio <- calc_dist_ratio(ch1_dists, ch1_maxes)
+mins_ls <- lapply(ch1_ratio, FUN = get_min_dists)
+mins_df <- create_mins_df(mins_ls, "ch1")
 knitr::kable(head(mins_df, 10))
 ```
 
@@ -107,6 +87,21 @@ For the time being, we'll use osa < 0.25 as the cutoff for "match" sentences.
 
 Because the test with chapter 1 appears to have worked, 
 
+```{r cache=TRUE}
+all_dists <- list()
+for(i in names(hcp_rev)) {
+  cur_dists <- lapply(hcp_cur, FUN = stringdistmatrix, b = hcp_rev[[i]])
+  cur_maxes <- lapply(hcp_cur, FUN = get_max_dist, hcp_rev[[i]])
+  cur_ratio <- calc_dist_ratio(cur_dists, cur_maxes)
+  cur_min_ls <- lapply(cur_ratio, FUN = get_min_dists)
+  cur_min_df <- create_mins_df(cur_min_ls, i)
+  all_dists[[i]] <- cur_min_df
+}
+all_dists_df <- dplyr::bind_rows(all_dists)
+good_dists <- all_dists_df[all_dists_df$val <= 0.25, ]
+cross_tab <- table(good_dists$rev_ch, good_dists$cur_ch)
+knitr::kable(cross_tab)
+```
 
 
 

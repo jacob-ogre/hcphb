@@ -80,25 +80,6 @@ summary_dists <- function(x) {
   return(list(n=n, mean=mean, med=med, sd=sd))
 }
 
-#' Calculate minimum string distances for one chapter vs. all other chapters
-#'
-#' More detailed description of the function
-#' @param all_ls A list of all chapter sentences
-#' @return A data.frame with minimum distances for each sentence in one_ch
-#' @seealso if any see alsos
-#' @export
-#' @examples
-#' \dontrun{
-#' ch1_dists <- one_vs_all_dists(hcp_cur, hcp_rev)
-#' }
-one_vs_all_dists <- function(all_ls, one_ch, ch_name) {
-  one_dists <- lapply(all_ls, FUN = stringdistmatrix, b = one_ch)
-  one_maxes <- lapply(all_ls, FUN = get_max_dist, one_ch)
-  one_ch_ratio <- calc_dist_ratio(one_dists, one_maxes)
-  one_v_all_mins <- lapply(one_ch_ratio, FUN = get_min_dists)
-  mins_df <- create_mins_df(one_v_all_mins, ch_name)
-}
-
 #' Calculate the distance (OSA) ratio from distance and max distance matrices
 #'
 #' Raw string edit distances are of limited use because differences in the 
@@ -131,12 +112,13 @@ calc_dist_ratio <- function(dists, maxes) {
 #' @return A data.frame with best match data
 #' @seealso \link{one_vs_all_dists}
 #' @export
+#' @importFrom dplyr bind_rows
 create_mins_df <- function(dist_list, name) {
   mins_df <- list()
   for(i in names(dist_list)) {
     mins_df[[i]] <- dplyr::bind_rows(dist_list[[i]]) 
     mins_df[[i]]$cur_ch <- i
-    n_reps <- lapply(df[[i]], FUN = function(x) length(x$pos))
+    n_reps <- lapply(dist_list[[i]], FUN = function(x) length(x$pos))
     sents <- seq(1:length(n_reps))
     n_sents <- list()
     for(j in 1:length(sents)) n_sents[[j]] <- rep(sents[j], n_reps[j])
