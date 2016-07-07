@@ -79,3 +79,74 @@ summary_dists <- function(x) {
   sd <- sd(x, na.rm = TRUE)
   return(list(n=n, mean=mean, med=med, sd=sd))
 }
+
+#' Calculate minimum string distances for one chapter vs. all other chapters
+#'
+#' More detailed description of the function
+#' @param all_ls A list of all chapter sentences
+#' @return A data.frame with minimum distances for each sentence in one_ch
+#' @seealso if any see alsos
+#' @export
+#' @examples
+#' \dontrun{
+#' ch1_dists <- one_vs_all_dists(hcp_cur, hcp_rev)
+#' }
+one_vs_all_dists <- function(all_ls, one_ch, ch_name) {
+  one_dists <- lapply(all_ls, FUN = stringdistmatrix, b = one_ch)
+  one_maxes <- lapply(all_ls, FUN = get_max_dist, one_ch)
+  one_ch_ratio <- calc_dist_ratio(one_dists, one_maxes)
+  one_v_all_mins <- lapply(one_ch_ratio, FUN = get_min_dists)
+  mins_df <- create_mins_df(one_v_all_mins, ch_name)
+}
+
+#' Calculate the distance (OSA) ratio from distance and max distance matrices
+#'
+#' Raw string edit distances are of limited use because differences in the 
+#' lengths of compared strings drives the distribution of expected distances.
+#' The raw edit distances are normalized by element-wise division of the OSA
+#' distance by the maximum possible distance (sum of compared string lengths).
+#' Identical strings have a ratio of 0, completely different strings == 1.
+#' 
+#' @param dists A matrix of string edit distances (OSA)
+#' @param maxes A matrix of maximum possible string edit distances
+#' @return A matrix of edit distance ratios
+#' @seealso \link{get_max_dist}
+#' @export
+calc_dist_ratio <- function(dists, maxes) {
+  ratio <- list()
+  for(i in names(dists)) {
+    ratio[[i]] <- dists[[i]] / maxes[[i]]
+  }
+  return(ratio)
+}
+
+#' Create a data.frame of minimum ratio string matches
+#'
+#' To analyze and plot sentence similarity, we need the data out of the 
+#' (ridiculous) nested list and into a useful data.frame, which this function
+#' provides.
+#' 
+#' @param df A list created in \link{one_vs_all_dists}
+#' @param name The name of the current (single) chapter being compared to all
+#' @return A data.frame with best match data
+#' @seealso \link{one_vs_all_dists}
+#' @export
+create_mins_df <- function(dist_list, name) {
+  mins_df <- list()
+  for(i in names(dist_list)) {
+    mins_df[[i]] <- dplyr::bind_rows(dist_list[[i]]) 
+    mins_df[[i]]$cur_ch <- i
+    n_reps <- lapply(df[[i]], FUN = function(x) length(x$pos))
+    sents <- seq(1:length(n_reps))
+    n_sents <- list()
+    for(j in 1:length(sents)) n_sents[[j]] <- rep(sents[j], n_reps[j])
+    mins_df[[i]]$rev_sent <- unlist(n_sents)
+  }
+  mins_df <- dplyr::bind_rows(mins_df)
+  mins_df$rev_ch <- rep(name, length(mins_df$pos))
+  mins_df$rev_idx <- seq(1:length(mins_df$pos))
+  return(mins_df)
+}
+
+
+
