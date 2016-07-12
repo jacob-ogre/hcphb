@@ -21,10 +21,10 @@ library(dplyr)
 library(ggplot2)
 library(ggthemes)
 library(hcphb)
-library(Matrix)
-library(RCircos)
+# library(Matrix)
+# library(RCircos)
 library(readr)
-library(readxl)
+# library(readxl)
 library(stringdist)
 library(stringr)
 library(viridis)
@@ -50,7 +50,7 @@ The Handbook revision (REV) has `r length(hcp_rev)` chapters or sections and the
 
 We use the `stringdist` package to identify the most similar sentences between the two documents. We like the default metric, 'optimal string alignment' or 'restricted Damerau-Levenshtein distance' because it is simple to understand: the distance is the sum of changes needed to align two strings A and B:
 
-```{r}
+```{r exampledist}
 A <- "This is a string."
 B <- "This is another string."
 C <- "This is a strung."
@@ -60,7 +60,7 @@ stringdist(A, C)
 
 We tokenized the documents using `Maxent_Sent_Token_Annotator` from `openNLP`, which tends to perform very well, but not perfectly. Because `pdf_text` doesn't preserve empty lines, which are part of the pattern for identifying section headings, those headings are concatenated with the first sentence of the section. That is, the sentence extraction is close but not perfect; however, if the heading and text didn't change at all between versions then the result is still an edit distance of 0. But there are differences...lots and lots of differences. Consider the comparison of sentences in REV chapter 1 to the sentences of all the chapters in CUR. First we gather the pairwise distances:
 
-```{r, cache=TRUE}
+```{r ch1_dist, cache=TRUE}
 ch1_dists <- lapply(hcp_cur, FUN = stringdistmatrix, b = hcp_rev$ch1)
 ch1_maxes <- lapply(hcp_cur, FUN = get_max_dist, hcp_rev$ch1)
 ch1_ratio <- calc_dist_ratio(ch1_dists, ch1_maxes)
@@ -71,7 +71,7 @@ knitr::kable(head(mins_df, 10))
 
 And then we can plot the similarities of REV chapter 1 along the sentences of CUR:
 
-```{r fig.cap="The distribution of similarities between sentences in chapter 1 of the revised HCP handbook and all the sentences in the current handbook. The yellow line is at the 0.01 percentile, the teal line at osa = 0.25, and purple at the 0.005 percentile."}
+```{r fig1, fig.cap="The distribution of similarities between sentences in chapter 1 of the revised HCP handbook and all the sentences in the current handbook. The yellow line is at the 0.01 percentile, the teal line at osa = 0.25, and purple at the 0.005 percentile."}
 ggplot(data = mins_df, aes(x = rev_idx, y = val)) +
   geom_point(alpha = 0.2, size = 2) +
   labs(x = "Match index",
@@ -84,7 +84,7 @@ ggplot(data = mins_df, aes(x = rev_idx, y = val)) +
 
 While osa = 0.25 seems like a reasonable cutoff (slightly less than the 0.01 percentile), we can examine a histogram of osa distances to see if that's reasonable:
 
-```{r fig.cap="The distribution of string distances doesn't show a strong cutoff, but the bulk of (incorrect) matches starts somewhere above 0.3."}
+```{r fig2, fig.cap="The distribution of string distances doesn't show a strong cutoff, but the bulk of (incorrect) matches starts somewhere above 0.3."}
 qplot(mins_df$val, geom="histogram", bins = 40) + theme_hc()
 ```
 
@@ -105,13 +105,14 @@ for(i in names(hcp_rev)) {
   all_dists[[i]] <- cur_min_df
 }
 all_dists_df <- dplyr::bind_rows(all_dists)
+save(all_dists_df, file = "../data-raw/all_dists_df.rda")
 head(all_dists_df)
 good_dists <- all_dists_df[all_dists_df$val <= 0.25, ]
 cross_tab <- table(good_dists$rev_ch, good_dists$cur_ch)
 knitr::kable(cross_tab)
 ```
 
-We come up with `r sum(cross_tab)` matches (with an optimal string alignment ratio <= 0.25) for sentences between the REV and CUR Handbooks. Many of these are repeats, however; only `r comb <- paste(good_dists$cur_ch, good_dists$pos, sep = ":"); length(unique(comb))` unique REV sentences match to CUR sentences.
+We come up with `r sum(cross_tab)` matches (with an optimal string alignment ratio <= 0.25) for sentences between the REV and CUR Handbooks. Many of these are repeats, however; only `r comb <- paste(good_dists$cur_ch, good_dists$rev_sent, sep = ":"); length(unique(comb))` unique REV sentences match to CUR sentences.
 
 ```{r circos1, cache = TRUE}
 all_dists_df$from <- str_c("current.", 
