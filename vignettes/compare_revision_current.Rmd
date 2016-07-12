@@ -15,11 +15,18 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+
 library(dplyr)
 library(ggplot2)
 library(ggthemes)
 library(hcphb)
+library(Matrix)
+library(RCircos)
+library(readr)
+library(readxl)
 library(stringdist)
+library(stringr)
 library(viridis)
 
 data("hcp_rev_sent")
@@ -75,7 +82,7 @@ ggplot(data = mins_df, aes(x = rev_idx, y = val)) +
   theme_hc()
 ```
 
-While osa = 0.25 seems like a reasonable cutoff (slightly less than the 0.01 percentile), we can examine a histogram of boostrapped mean distances to check how reasonable that value is:
+While osa = 0.25 seems like a reasonable cutoff (slightly less than the 0.01 percentile), we can examine a histogram of osa distances to see if that's reasonable:
 
 ```{r fig.cap="The distribution of string distances doesn't show a strong cutoff, but the bulk of (incorrect) matches starts somewhere above 0.3."}
 qplot(mins_df$val, geom="histogram", bins = 40) + theme_hc()
@@ -85,9 +92,9 @@ For the time being, we'll use osa < 0.25 as the cutoff for "match" sentences.
 
 ### Matching sentences across all chapters
 
-Because the test with chapter 1 appears to have worked, 
+Because the test with chapter 1 appears to have worked, we can run all sentences in all REV chapters against all chapters and sentences in CUR:
 
-```{r cache=TRUE}
+```{r allbyall, cache=TRUE}
 all_dists <- list()
 for(i in names(hcp_rev)) {
   cur_dists <- lapply(hcp_cur, FUN = stringdistmatrix, b = hcp_rev[[i]])
@@ -98,12 +105,53 @@ for(i in names(hcp_rev)) {
   all_dists[[i]] <- cur_min_df
 }
 all_dists_df <- dplyr::bind_rows(all_dists)
+head(all_dists_df)
 good_dists <- all_dists_df[all_dists_df$val <= 0.25, ]
 cross_tab <- table(good_dists$rev_ch, good_dists$cur_ch)
 knitr::kable(cross_tab)
 ```
 
+We come up with `r sum(cross_tab)` matches (with an optimal string alignment ratio <= 0.25) for sentences between the REV and CUR Handbooks. Many of these are repeats, however; only `r comb <- paste(good_dists$cur_ch, good_dists$pos, sep = ":"); length(unique(comb))` unique REV sentences match to CUR sentences.
 
+```{r circos1, cache = TRUE}
+all_dists_df$from <- str_c("current.", 
+                           all_dists_df$cur_ch, ".", 
+                           all_dists_df$cur_sent)
+all_dists_df$to <- str_c("revised.", 
+                         all_dists_df$rev_ch, ".", 
+                         all_dists_df$rev_sent)
 
+amat <- matrix(NA, nrow=length(unlist(hcp_cur)), ncol=length(unlist(hcp_rev)))
+cur_chs <- names(hcp_cur)
+cnames <- rep(NA, length(unlist(hcp_cur)))
+st <- 1
+for(i in cur_chs) {
+  for(j in 1:length(hcp_cur[[i]])) {
+    cnames[st] <- paste0("current.", i, ".", j)
+    st <- st + 1
+  }
+}
+rev_chs <- names(hcp_rev)
+rnames <- rep(NA, length(unlist(hcp_rev)))
+st <- 1
+for(i in rev_chs) {
+  for(j in 1:length(hcp_rev[[i]])) {
+    rnames[st] <- paste0("revised.", i, ".", j)
+    st <- st + 1
+  }
+}
+row.names(amat) <- cnames
+colnames(amat) <- rnames
 
+for(i in 1:length(all_dists_df$cur_sent)) {
+  amat[all_dists_df[i,]$from, all_dists_df[i,]$to] <- 1 - all_dists_df[i,]$val  
+}
 
+save(amat, file = "../data-raw/all_invdists_mat.rda")
+edgebundleR::edgebundle(amat, cutoff = 0.75, width = 800)
+# # Looks like I may have to do this in Circos and do a system call...
+# # no idea if I can get that to show in Rmd..
+
+```
+
+What will show up?

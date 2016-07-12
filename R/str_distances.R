@@ -116,17 +116,18 @@ calc_dist_ratio <- function(dists, maxes) {
 create_mins_df <- function(dist_list, name) {
   mins_df <- list()
   for(i in names(dist_list)) {
-    mins_df[[i]] <- dplyr::bind_rows(dist_list[[i]]) 
+    mins_df[[i]] <- dplyr::bind_rows(dist_list[[i]])
     mins_df[[i]]$cur_ch <- i
     n_reps <- lapply(dist_list[[i]], FUN = function(x) length(x$pos))
     sents <- seq(1:length(n_reps))
     n_sents <- list()
     for(j in 1:length(sents)) n_sents[[j]] <- rep(sents[j], n_reps[j])
-    mins_df[[i]]$rev_sent <- unlist(n_sents)
+    mins_df[[i]]$cur_sent <- unlist(n_sents)
+    names(mins_df[[i]])[1] <- "rev_sent"
   }
   mins_df <- dplyr::bind_rows(mins_df)
-  mins_df$rev_ch <- rep(name, length(mins_df$pos))
-  mins_df$rev_idx <- seq(1:length(mins_df$pos))
+  mins_df$rev_ch <- rep(name, length(mins_df$rev_sent))
+  mins_df$rev_idx <- seq(1:length(mins_df$rev_sent))
   return(mins_df)
 }
 
