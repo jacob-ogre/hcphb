@@ -1,5 +1,5 @@
 ---
-title: "Habitat Conservation Planning Handbook: Old vs. New"
+title: "HCP Handbook: Old vs. New (draft)"
 author: "Jacob Malcom, Defenders of Wildlife"
 date: "`r Sys.Date()`"
 output: 
@@ -21,10 +21,9 @@ library(dplyr)
 library(ggplot2)
 library(ggthemes)
 library(hcphb)
-# library(Matrix)
-# library(RCircos)
+library(plotly)
 library(readr)
-# library(readxl)
+library(readxl)
 library(stringdist)
 library(stringr)
 library(viridis)
@@ -38,9 +37,17 @@ hcp_cur <- hcp_cur_sent
 hcp_rev <- hcp_rev_sent
 ```
 
+***
+
+#### _Draft_
+
+_As noted in the title, this document is a draft, and is incomplete at this time._
+
+***
+
 ## Habitat Conservation Planning Handbook: Old vs. New
 
-Habitat Conservation Plans (HCPs) are a conservation tool enabled by [section 10(a)(1)(B)](https://www.fws.gov/endangered/what-we-do/hcp-overview.html) of the [U.S. Endangered Species Act (ESA)](https://www.fws.gov/endangered/laws-policies/). In return for taking actions that will benefit ESA-listed species, non-federal entities with an HCP receive an [Incidental Take Permit (ITP)](https://www.fws.gov/endangered/esa-library/pdf/HCPBK1.PDF) that allows such species to be harmed. The U.S. Fish and Wildlife Service (Dept. of the Interior) and National Marine Fisheries Service (Dept. of Commerce) administer the HCP programs. In 1996, the Services finalized their Habitat Conservation Planning Handbook (Handbook), which is used to guide the development of HCPs. In June, 2016, the Services issued a notice in the _Federal Register_ that they were revising the Handbook and [released the draft](https://www.regulations.gov/contentStreamer?documentId=FWS-HQ-ES-2016-0004-0002&disposition=attachment&contentType=pdf) for public comment. At `r length(hcp_rev_all)` pages for the revision and `r length(hcp_cur_all)` pages in the original (current), trying to determine all of the proposed changes could be rather time-consuming. To aid in the review process, we undertook some basic analyses of the two documents. In the following sections we exclude the tables of contents and acronym lists from analysis, but otherwise, all text returned from `pdftools::pdf_text` was analyzed. The analyses in this vignette are available from the R package in which the vignette was written, available from [GitHub](https://github.com/jacob-ogre/hcphb).
+Habitat Conservation Plans (HCPs) are a conservation tool enabled by [section 10(a)(1)(B)](https://www.fws.gov/endangered/what-we-do/hcp-overview.html) of the [U.S. Endangered Species Act (ESA)](https://www.fws.gov/endangered/laws-policies/). In return for taking actions that will benefit ESA-listed species, non-federal entities with an HCP receive an [Incidental Take Permit (ITP)](https://www.fws.gov/endangered/esa-library/pdf/HCPBK1.PDF) that allows such species to be harmed incidental to otherwise legal activities. The U.S. Fish and Wildlife Service (Dept. of the Interior) and National Marine Fisheries Service (Dept. of Commerce) administer the HCP programs. In 1996, the Services finalized their Habitat Conservation Planning Handbook (Handbook), which is used to guide the development of HCPs. In June, 2016, the Services issued a notice in the _Federal Register_ that they were revising the Handbook and [released the draft](https://www.regulations.gov/contentStreamer?documentId=FWS-HQ-ES-2016-0004-0002&disposition=attachment&contentType=pdf) for public comment. At `r length(hcp_rev_all)` pages for the revision and `r length(hcp_cur_all)` pages in the original (current), trying to determine all of the proposed changes could be rather time-consuming. To aid in the review process, we undertook some basic analyses of the two documents. In the following sections we exclude the tables of contents and acronym lists from analysis, but otherwise, all text returned from `pdftools::pdf_text` was analyzed. The analyses in this vignette are available from the R package in which the vignette was written, available from [GitHub](https://github.com/jacob-ogre/hcphb).
 
 ### Summary of the documents
 
@@ -61,11 +68,13 @@ stringdist(A, C)
 We tokenized the documents using `Maxent_Sent_Token_Annotator` from `openNLP`, which tends to perform very well, but not perfectly. Because `pdf_text` doesn't preserve empty lines, which are part of the pattern for identifying section headings, those headings are concatenated with the first sentence of the section. That is, the sentence extraction is close but not perfect; however, if the heading and text didn't change at all between versions then the result is still an edit distance of 0. But there are differences...lots and lots of differences. Consider the comparison of sentences in REV chapter 1 to the sentences of all the chapters in CUR. First we gather the pairwise distances:
 
 ```{r ch1_dist, cache=TRUE}
-ch1_dists <- lapply(hcp_cur, FUN = stringdistmatrix, b = hcp_rev$ch1)
-ch1_maxes <- lapply(hcp_cur, FUN = get_max_dist, hcp_rev$ch1)
-ch1_ratio <- calc_dist_ratio(ch1_dists, ch1_maxes)
-mins_ls <- lapply(ch1_ratio, FUN = get_min_dists)
-mins_df <- create_mins_df(mins_ls, "ch1")
+# # Not run here...run on cluster, loaded here
+# ch1_dists <- lapply(hcp_cur, FUN = stringdistmatrix, b = hcp_rev$ch1)
+# ch1_maxes <- lapply(hcp_cur, FUN = get_max_dist, hcp_rev$ch1)
+# ch1_ratio <- calc_dist_ratio(ch1_dists, ch1_maxes)
+# mins_ls <- lapply(ch1_ratio, FUN = get_min_dists)
+# mins_df <- create_mins_df(mins_ls, "ch1")
+load("../data/mins_df.rda")
 knitr::kable(head(mins_df, 10))
 ```
 
@@ -95,64 +104,71 @@ For the time being, we'll use osa < 0.25 as the cutoff for "match" sentences.
 Because the test with chapter 1 appears to have worked, we can run all sentences in all REV chapters against all chapters and sentences in CUR:
 
 ```{r allbyall, cache=TRUE}
-all_dists <- list()
-for(i in names(hcp_rev)) {
-  cur_dists <- lapply(hcp_cur, FUN = stringdistmatrix, b = hcp_rev[[i]])
-  cur_maxes <- lapply(hcp_cur, FUN = get_max_dist, hcp_rev[[i]])
-  cur_ratio <- calc_dist_ratio(cur_dists, cur_maxes)
-  cur_min_ls <- lapply(cur_ratio, FUN = get_min_dists)
-  cur_min_df <- create_mins_df(cur_min_ls, i)
-  all_dists[[i]] <- cur_min_df
-}
-all_dists_df <- dplyr::bind_rows(all_dists)
-save(all_dists_df, file = "../data-raw/all_dists_df.rda")
-head(all_dists_df)
-good_dists <- all_dists_df[all_dists_df$val <= 0.25, ]
-cross_tab <- table(good_dists$rev_ch, good_dists$cur_ch)
-knitr::kable(cross_tab)
-```
-
-We come up with `r sum(cross_tab)` matches (with an optimal string alignment ratio <= 0.25) for sentences between the REV and CUR Handbooks. Many of these are repeats, however; only `r comb <- paste(good_dists$cur_ch, good_dists$rev_sent, sep = ":"); length(unique(comb))` unique REV sentences match to CUR sentences.
-
-```{r circos1, cache = TRUE}
+# # Not run locally; run on cluster, then loaded here
+# all_dists <- list()
+# for(i in names(hcp_rev)) {
+#   cur_dists <- lapply(hcp_cur, FUN = stringdistmatrix, b = hcp_rev[[i]])
+#   cur_maxes <- lapply(hcp_cur, FUN = get_max_dist, hcp_rev[[i]])
+#   cur_ratio <- calc_dist_ratio(cur_dists, cur_maxes)
+#   cur_min_ls <- lapply(cur_ratio, FUN = get_min_dists)
+#   cur_min_df <- create_mins_df(cur_min_ls, i)
+#   all_dists[[i]] <- cur_min_df
+# }
+# # all_dists_df <- dplyr::bind_rows(all_dists)
+# # save(all_dists_df, file = "../data-raw/all_dists_df.rda")
+load("../data/all_dists_df.rda")
 all_dists_df$from <- str_c("current.", 
                            all_dists_df$cur_ch, ".", 
                            all_dists_df$cur_sent)
 all_dists_df$to <- str_c("revised.", 
                          all_dists_df$rev_ch, ".", 
                          all_dists_df$rev_sent)
+head(all_dists_df)
+good_dists <- all_dists_df[all_dists_df$val <= 0.25, ]
+cross_tab <- table(good_dists$rev_ch, good_dists$cur_ch)
+# knitr::kable(cross_tab)
+plot_ly(z = cross_tab,
+        type = "heatmap",
+        x = colnames(cross_tab),
+        y = row.names(cross_tab),
+        colors = viridis(7)) %>%
+layout(title = "Sentence matches of HCP Handbook and revision",
+       xaxis = list(title = "Current", tickangle = 45), 
+       yaxis = list(title = "Revision"), 
+       legend = list(title = "# matches"),
+       margin = list(b = 50))
+```
 
-amat <- matrix(NA, nrow=length(unlist(hcp_cur)), ncol=length(unlist(hcp_rev)))
-cur_chs <- names(hcp_cur)
-cnames <- rep(NA, length(unlist(hcp_cur)))
-st <- 1
-for(i in cur_chs) {
-  for(j in 1:length(hcp_cur[[i]])) {
-    cnames[st] <- paste0("current.", i, ".", j)
-    st <- st + 1
-  }
-}
-rev_chs <- names(hcp_rev)
-rnames <- rep(NA, length(unlist(hcp_rev)))
-st <- 1
-for(i in rev_chs) {
-  for(j in 1:length(hcp_rev[[i]])) {
-    rnames[st] <- paste0("revised.", i, ".", j)
-    st <- st + 1
-  }
-}
-row.names(amat) <- cnames
-colnames(amat) <- rnames
+We come up with `r sum(cross_tab)` matches (with an optimal string alignment ratio <= 0.25) for sentences between the REV and CUR Handbooks. Many of these are repeats, however; only `r comb <- paste(good_dists$cur_ch, good_dists$rev_sent, sep = ":"); length(unique(comb))` unique REV sentences match to CUR sentences.
 
-for(i in 1:length(all_dists_df$cur_sent)) {
-  amat[all_dists_df[i,]$from, all_dists_df[i,]$to] <- 1 - all_dists_df[i,]$val  
+```{r circos1, cache = TRUE, include = FALSE}
+cur_names <- unique(all_dists_df$from)
+rev_names <- unique(all_dists_df$to)
+both_name <- c(cur_names, rev_names)
+dims <- length(cur_names) + length(rev_names)
+amat <- matrix(data = NA, nrow = dims, ncol = dims)
+rownames(amat) <- both_name
+colnames(amat) <- both_name
+
+for(i in 1:length(cur_names)) {
+  cur_sub <- dplyr::filter(all_dists_df, from == cur_names[i])
+  for(j in 1:length(cur_sub$to)) {
+    amat[cur_names[i], cur_names[j]] <- 1 - cur_sub[i,]$val
+    amat[cur_names[j], cur_names[i]] <- 1 - cur_sub[i,]$val
+  }
 }
 
 save(amat, file = "../data-raw/all_invdists_mat.rda")
+tmp <- data.frame(val = all_dists_df$val,
+                  from = all_dists_df$from,
+                  to = all_dists_df$to)
 edgebundleR::edgebundle(amat, cutoff = 0.75, width = 800)
 # # Looks like I may have to do this in Circos and do a system call...
 # # no idea if I can get that to show in Rmd..
 
 ```
 
-What will show up?
+### Comparisons to other documents
+
+There have been a significant number of legal and policy developments since the CUR handbook was written in 1996, and we expect that the REV handbook incorporates this new information. For example, in 2015 the White House released a government-wide [mitigation policy](link/to/policy) that should affect how avoidance, minimization, and mitigation requirements are met for HCPs. Here we evaluate the sentence similarities of CUR and REV to these "outside" documents, as available, to understand where and how new information has been incorportated.
+

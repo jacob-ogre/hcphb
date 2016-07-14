@@ -1,0 +1,147 @@
+---
+title: "Topic Models of the HCP Handbooks"
+author: "Jacob Malcom, Defenders of Wildlife"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    fig_caption: yes
+    toc: true
+    toc_depth: 3
+    toc_float: true
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+library(dplyr)
+library(hcphb)
+library(ldatuning)
+library(readr)
+library(stringr)
+library(tm)
+library(topicmodels)
+
+data("hcp_rev_sent")
+data("hcp_cur_sent")
+
+hcp_cur <- unlist(hcp_cur_sent, use.names = FALSE)
+hcp_rev <- unlist(hcp_rev_sent, use.names = FALSE)
+```
+
+### Data prep
+
+To build the topic models we need to first build the corpus for each document. Single sentences are likely too small for documents within each corpus, and entire pages are more likely to encompass multiple topics (increasing the signal:noise ratio). It's unclear how many sentences should be included in each chunk that constitutes a document, so we try 5- and 10-sentence chunks as documents in the corpuses.
+
+```{r prep_corp, echo = FALSE, cache = TRUE}
+# # first the CUR handbook
+n_5 <- ceiling(length(hcp_cur) / 5)
+cur_5 <- list()
+for(i in 1:n_5) {
+  st <- (i * 5) - 4
+  en <- i * 5
+  cur_5[[i]] <- paste(hcp_cur[st:en], collapse = " ")
+}
+cur_5_corp <- VCorpus(VectorSource(cur_5))
+
+n_10 <- ceiling(length(hcp_cur) / 10)
+cur_10 <- list()
+for(i in 1:n_10) {
+  st <- (i * 10) - 9
+  en <- i * 10
+  cur_10[[i]] <- paste(hcp_cur[st:en], collapse = " ")
+}
+cur_10_corp <- VCorpus(VectorSource(cur_10))
+
+# # now the REV handbook
+n_5 <- ceiling(length(hcp_rev) / 5)
+rev_5 <- list()
+for(i in 1:n_5) {
+  st <- (i * 5) - 4
+  en <- i * 5
+  rev_5[[i]] <- paste(hcp_rev[st:en], collapse = " ")
+}
+rev_5_corp <- VCorpus(VectorSource(rev_5))
+
+n_10 <- ceiling(length(hcp_rev) / 10)
+rev_10 <- list()
+for(i in 1:n_10) {
+  st <- (i * 10) - 9
+  en <- i * 10
+  rev_10[[i]] <- paste(hcp_rev[st:en], collapse = " ")
+}
+rev_10_corp <- VCorpus(VectorSource(rev_10))
+```
+
+Now we clean up the corpuses, e.g., removing stopwords, punctuation, and other miscellany.
+
+```{r corp_clean, echo = FALSE}
+cleanup <- function(x) {
+  x <- tm_map(x, content_transformer(tolower))
+  x <- tm_map(x, removeWords, stopwords("english"))
+  x <- tm_map(x, removePunctuation)
+}
+
+cur_5_clean <- cleanup(cur_5_corp)
+cur_10_clean <- cleanup(cur_10_corp)
+rev_5_clean <- cleanup(rev_5_corp)
+rev_10_clean <- cleanup(rev_10_corp)
+```
+
+LDA is performed on a document-term matrix (DTM), and we construct the DTMs for all four corpuses using `tm::DocumentTermMatrix`. Infrequent words rarely add much understanding to topic models, so we also remove terms with a frequency < 4.
+
+```{r DTMs, echo = FALSE}
+cur_5_DTM <- DocumentTermMatrix(cur_5_clean,
+                                control = list(minWordLength = 3))
+cur_10_DTM <- DocumentTermMatrix(cur_10_clean,
+                                 control = list(minWordLength = 3))
+rev_5_DTM <- DocumentTermMatrix(rev_5_clean,
+                                control = list(minWordLength = 3))
+rev_10_DTM <- DocumentTermMatrix(rev_10_clean,
+                                 control = list(minWordLength = 3))
+
+cat(paste("# cur_5_DTM terms:", cur_5_DTM$ncol, "\n"))
+cat(paste("# cur_10_DTM terms:", cur_10_DTM$ncol, "\n"))
+cat(paste("# rev_5_DTM terms:", rev_5_DTM$ncol, "\n"))
+cat(paste("# rev_10_DTM terms:", rev_10_DTM$ncol, "\n"))
+
+cur_5_DTM_slim <- cur_5_DTM[ , which(table(cur_5_DTM$j) >= 5)]
+cur_10_DTM_slim <- cur_10_DTM[ , which(table(cur_10_DTM$j) >= 5)]
+rev_5_DTM_slim <- rev_5_DTM[ , which(table(rev_5_DTM$j) >= 5)]
+rev_10_DTM_slim <- rev_10_DTM[ , which(table(rev_10_DTM$j) >= 5)]
+
+cat(paste("# cur_5_DTM_slim terms:", cur_5_DTM_slim$ncol, "\n"))
+cat(paste("# cur_10_DTM_slim terms:",cur_10_DTM_slim$ncol, "\n"))
+cat(paste("# rev_5_DTM_slim terms:", rev_5_DTM_slim$ncol, "\n"))
+cat(paste("# rev_10_DTM_slim terms:",rev_10_DTM_slim$ncol, "\n"))
+```
+
+Two interesting points with this first analysis. First is that REV has nearly 2,000 fewer unique terms than CUR despite being a slightly longer document. Second is that the difference in term counts is just over 100 after removing infrequent terms. I think this reflects the clearer writing style we have noticed in REV relative to CUR.
+
+### Topic models
+
+Before digging too far into the substance of topics, we need to know how many topics to model. To do so, we use the `ldatuning` package to test a range of values for the different handbook versions and sentence sizes. Because 
+
+```{r topics_1}
+dtms <- c(cur_5_DTM_slim,
+          cur_10_DTM_slim,
+          rev_5_DTM_slim,
+          rev_10_DTM_slim)
+
+k_select <- list()
+for(i in dtms) {
+  k_select[[i]] <- FindTopicsNumber(i,
+                       topics = seq(from = 50, to = 150, by = 20),
+                       metrics = c("CaoJuan2009", "Arun2010"),
+                       method = "Gibbs",
+                       control = list(seed = 742,
+                                      burnin = 1000,
+                                      thin = 100,
+                                      iter = 1000),
+                       mc.cores = parallel::detectCores(),
+                       verbose = TRUE)
+  FindTopicsNumber_plot(k_select[[i]])
+}
+save(k_select, file = "../data-raw/k_select.rda")
+```
