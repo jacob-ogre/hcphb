@@ -1,0 +1,217 @@
+---
+title: "HCP handbook notebook"
+author: "Jacob Malcom, Defenders of Wildlife"
+output: html_notebook
+---
+
+This is my first test with Rmd notebooks, and am looking at it as an alternative to notes in, e.g., Evernote. A bunch of code is copied-and-pasted from the history, because I was exploring in the console while the big test of optimal K for LDA was running.
+
+```{r setup, include = FALSE}
+library(broom)
+library(dplyr)
+library(hcphb)
+library(ldatuning)
+library(readr)
+library(stringr)
+library(tm)
+library(topicmodels)
+library(viridis)
+library(wordnet)
+
+data("hcp_rev_sent")
+data("hcp_cur_sent")
+
+hcp_cur <- unlist(hcp_cur_sent, use.names = FALSE)
+hcp_rev <- unlist(hcp_rev_sent, use.names = FALSE)
+```
+
+### Data prep
+
+```{r prep_corp, cache = TRUE}
+# # first the CUR handbook
+n_5 <- ceiling(length(hcp_cur) / 5)
+cur_5 <- list()
+for(i in 1:n_5) {
+  st <- (i * 5) - 4
+  en <- i * 5
+  cur_5[[i]] <- paste(hcp_cur[st:en], collapse = " ")
+}
+cur_5_corp <- VCorpus(VectorSource(cur_5))
+
+n_10 <- ceiling(length(hcp_cur) / 10)
+cur_10 <- list()
+for(i in 1:n_10) {
+  st <- (i * 10) - 9
+  en <- i * 10
+  cur_10[[i]] <- paste(hcp_cur[st:en], collapse = " ")
+}
+cur_10_corp <- VCorpus(VectorSource(cur_10))
+
+# # now the REV handbook
+n_5 <- ceiling(length(hcp_rev) / 5)
+rev_5 <- list()
+for(i in 1:n_5) {
+  st <- (i * 5) - 4
+  en <- i * 5
+  rev_5[[i]] <- paste(hcp_rev[st:en], collapse = " ")
+}
+rev_5_corp <- VCorpus(VectorSource(rev_5))
+
+n_10 <- ceiling(length(hcp_rev) / 10)
+rev_10 <- list()
+for(i in 1:n_10) {
+  st <- (i * 10) - 9
+  en <- i * 10
+  rev_10[[i]] <- paste(hcp_rev[st:en], collapse = " ")
+}
+rev_10_corp <- VCorpus(VectorSource(rev_10))
+```
+
+Now we clean up the corpuses, e.g., removing stopwords, punctuation, and other miscellany.
+
+```{r corp_clean}
+cleanup <- function(x) {
+  x <- tm_map(x, content_transformer(tolower))
+  x <- tm_map(x, removeWords, stopwords("english"))
+  x <- tm_map(x, removePunctuation)
+}
+
+cur_5_clean <- cleanup(cur_5_corp)
+cur_10_clean <- cleanup(cur_10_corp)
+rev_5_clean <- cleanup(rev_5_corp)
+rev_10_clean <- cleanup(rev_10_corp)
+```
+
+LDA is performed on a document-term matrix (DTM), and we construct the DTMs for all four corpuses using `tm::DocumentTermMatrix`. Infrequent words rarely add much understanding to topic models, so we also remove terms with a frequency < 4.
+
+```{r DTMs}
+cur_5_DTM <- DocumentTermMatrix(cur_5_clean,
+                                control = list(minWordLength = 3))
+cur_10_DTM <- DocumentTermMatrix(cur_10_clean,
+                                 control = list(minWordLength = 3))
+rev_5_DTM <- DocumentTermMatrix(rev_5_clean,
+                                control = list(minWordLength = 3))
+rev_10_DTM <- DocumentTermMatrix(rev_10_clean,
+                                 control = list(minWordLength = 3))
+
+cat(paste("# cur_5_DTM terms:", cur_5_DTM$ncol, "\n"))
+cat(paste("# cur_10_DTM terms:", cur_10_DTM$ncol, "\n"))
+cat(paste("# rev_5_DTM terms:", rev_5_DTM$ncol, "\n"))
+cat(paste("# rev_10_DTM terms:", rev_10_DTM$ncol, "\n"))
+```
+
+So there are many more terms in CUR than in REV...
+
+```{r}
+cur_5_DTM_slim <- cur_5_DTM[ , which(table(cur_5_DTM$j) >= 5)]
+cur_10_DTM_slim <- cur_10_DTM[ , which(table(cur_10_DTM$j) >= 5)]
+rev_5_DTM_slim <- rev_5_DTM[ , which(table(rev_5_DTM$j) >= 5)]
+rev_10_DTM_slim <- rev_10_DTM[ , which(table(rev_10_DTM$j) >= 5)]
+
+cat(paste("# cur_5_DTM_slim terms:", cur_5_DTM_slim$ncol, "\n"))
+cat(paste("# cur_10_DTM_slim terms:",cur_10_DTM_slim$ncol, "\n"))
+cat(paste("# rev_5_DTM_slim terms:", rev_5_DTM_slim$ncol, "\n"))
+cat(paste("# rev_10_DTM_slim terms:",rev_10_DTM_slim$ncol, "\n"))
+```
+
+And that holds after filtering the low-frequency terms.
+
+### An LDA test
+
+First we do LDA with k = 25 and 50, then focus on k = 25 to compare topics. One way to do topic comparison is by converting the words associated with each topic into a document-term matrix (DTM; with topic ~ document), then calculating distances (euclidean by default) from the DTM:
+
+```{r}
+# # Uncomment the block below to-rerun analysis.
+Ks <- c(25)
+test <- parallel::mclapply(Ks,
+            LDA,
+            x = cur_10_DTM_slim,
+            method = "Gibbs",
+            control = list(seed = 742,
+                           burnin = 1000,
+                           thin = 100,
+                           iter = 1000),
+            mc.cores = 2)
+z <- data.frame(terms(test[[1]], 30), stringsAsFactors = FALSE)
+head(z)
+w <- as.list(z)
+w <- lapply(w, paste, collapse = " ")
+w[[1]]
+w_corp <- VCorpus(VectorSource(w))
+w_DTM <- DocumentTermMatrix(w_corp)
+dim(w_DTM)
+w_dist <- dist(w_DTM)
+head(w_dist)
+plot(hclust(w_dist))
+```
+
+Based on this simple approach, it looks like there are six clusters of topics. We can compare the lists of some pairs of topics to see if they make sense:
+
+```{r}
+w[[1]]
+w[[15]]
+cor.test(as.vector(w_DTM[1,]), as.vector(w_DTM[15,]))
+cor.test(as.vector(w_DTM[1,]), as.vector(w_DTM[2,]))
+```
+
+So there is a statistically significant correlation between the presence-absence data for topics 1 and 15, but 1 and 2 (in different topic clusters) are uncorrelated. Across all topics the distribution of correlations is:
+
+```{r}
+w_DTM_mat <- as.matrix(w_DTM)
+w_cor_mat <- cor(t(w_DTM_mat))
+for_hist <- data.frame(cor = w_cor_mat[w_cor_mat < 1])
+qplot(data = for_hist, x = cor, geom = "histogram", bins = 7) + 
+  ggthemes::theme_hc()
+```
+
+We see that most correlations are centered around zero, so even though the clusters appear in the dendrogram, there's not a whole lot of separation. And the correlations as a heatmap:
+
+```{r}
+cor_mat <- melt(w_cor_mat)
+cor_mat <- filter(cor_mat, value < 1)
+ggplot(data=cor_mat, aes(x = X1, y = X2)) +
+  geom_tile(aes(fill = value)) +
+  labs(x = "Topic",
+       y = "Topic") +
+  scale_fill_viridis() +
+  theme_bw()
+```
+
+As expected, the patterns here (e.g., topics 1 & 15, 12 & 17) are captured in the dendrogram. Note that even the strongest correlations are still relatively weak: the correlation for 1 & 15 is just 0.18. Whether this speaks to the power of separation of topics from LDA or a weakness because topics are so different is unclear. Actually...beyond the correlation matrix, there's a role here for PCA. In theory, LDA will find K unique topics from the corpus. If analyzed with PCA, we should have 25 maximally orthogonal dimensions.
+
+```{r}
+top_pca <- FactoMineR::PCA(t(w_DTM_mat))
+eig <- data.frame(top_pca$eig)
+plot(eig$percentage.of.variance, type = "b")
+```
+
+#### Interim conclusion
+
+There is probably some utility in examining the similarities of topics as done above. There may be opportunities to improve this analysis, such as:
+
+- _Using word frequencies from the text_ (easy-ish) The preceding analysis only uses the presence and absence of words to build the similarity matrix. The topics from which the DTMs for the similarity matrix are created are based on word frequencies and covariances, but lost here.
+- _Incorporate semantics_ (hard) Even though natural language processing research suggests that many aspects of textual analysis can be recovered with purely mathematical relationships of words, we know that the frequencies of words are complemented by the semantic similarities of those words. May try `wordnet` to see if something can be uncovered.
+
+### WordNet on top of LDA
+
+__So this is going to take more "doing" than I feel like I have time for at the moment...__
+
+```{r}
+setDict("/usr/local/Cellar/wordnet/3.1/dict")
+tmp <- z$Topic.1
+res <- list()
+for(i in 1:length(tmp)) {
+  print(paste(i, tmp[i]))
+  res[[i]] <- NA
+  filt <- getTermFilter("ExactMatchFilter", tmp[i], TRUE)
+  term <- getIndexTerms(c("NOUN", "VERB"), 5, filt)
+  if(identical(term, NULL)) {
+    res[[i]] <- NA
+  } else {
+    for(j in length(term)) {
+      res[[i]] <- c(res[[i]], getSynonyms(term[[j]]))
+    }
+  }
+}
+```
+
