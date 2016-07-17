@@ -132,14 +132,14 @@ dtms <- c(cur_5_DTM_slim,
 k_select <- list()
 for(i in dtms) {
   k_select[[i]] <- FindTopicsNumber(i,
-                       topics = seq(from = 50, to = 150, by = 20),
+                       topics = seq(from = 50, to = 130, by = 20),
                        metrics = c("CaoJuan2009", "Arun2010"),
                        method = "Gibbs",
                        control = list(seed = 742,
                                       burnin = 1000,
                                       thin = 100,
                                       iter = 1000),
-                       mc.cores = parallel::detectCores(),
+                       mc.cores = parallel::detectCores() - 1,
                        verbose = TRUE)
   FindTopicsNumber_plot(k_select[[i]])
 }
