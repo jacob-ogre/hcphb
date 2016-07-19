@@ -124,26 +124,55 @@ Two interesting points with this first analysis. First is that REV has nearly 2,
 Before digging too far into the substance of topics, we need to know how many topics to model. To do so, we use the `ldatuning` package to test a range of values for the different handbook versions and sentence sizes. Because 
 
 ```{r topics_1}
-dtms <- c(cur_5_DTM_slim,
-          cur_10_DTM_slim,
-          rev_5_DTM_slim,
-          rev_10_DTM_slim)
+# dtms <- c(cur_5_DTM_slim,
+#           cur_10_DTM_slim,
+#           rev_5_DTM_slim,
+#           rev_10_DTM_slim)
+# 
+# k_select <- list()
+# for(i in dtms) {
+#   cur_models <- FindTopicsNumber(i,
+#                   topics = seq(from = 50, to = 130, by = 20),
+#                   metrics = c("CaoJuan2009", "Arun2010"),
+#                   method = "Gibbs",
+#                   control = list(seed = 742,
+#                                  burnin = 1000,
+#                                  thin = 100,
+#                                  iter = 1000),
+#                   mc.cores = parallel::detectCores() - 1,
+#                   verbose = TRUE)
+#   k_select[[i]] <- cur_models
+#   save(cur_models, paste0("../data-raw/", i, "_tuned.rda"))
+#   FindTopicsNumber_plot(k_select[[i]])
+# }
+# save(k_select, file = "../data-raw/k_select_all.rda")
+```
 
-k_select <- list()
-for(i in dtms) {
-  cur_models <- FindTopicsNumber(i,
-                  topics = seq(from = 50, to = 130, by = 20),
-                  metrics = c("CaoJuan2009", "Arun2010"),
-                  method = "Gibbs",
-                  control = list(seed = 742,
-                                 burnin = 1000,
-                                 thin = 100,
-                                 iter = 1000),
-                  mc.cores = parallel::detectCores() - 1,
-                  verbose = TRUE)
-  k_select[[i]] <- cur_models
-  save(cur_models, paste0("../data-raw/", i, "_tuned.rda"))
-  FindTopicsNumber_plot(k_select[[i]])
-}
-save(k_select, file = "../data-raw/k_select_all.rda")
+
+```{r}
+cur_5_ntop <- FindTopicsNumber(cur_5_DTM_slim,
+                topics = seq(from = 50, to = 150, by = 20),
+                metrics = c("CaoJuan2009", "Arun2010"),
+                method = "Gibbs",
+                control = list(seed = 742,
+                burnin = 1000,
+                thin = 100,
+                iter = 1000),
+                mc.cores = 2L,
+                verbose = TRUE)
+FindTopicsNumber_plot(cur_5_ntop)
+save(cur_5_ntop, file = "../data-raw/cur_5_ntop.rda")
+
+rev_5_ntop <- FindTopicsNumber(rev_5_DTM_slim,
+                topics = seq(from = 50, to = 150, by = 20),
+                metrics = c("CaoJuan2009", "Arun2010"),
+                method = "Gibbs",
+                control = list(seed = 742,
+                burnin = 1000,
+                thin = 100,
+                iter = 1000),
+                mc.cores = 2L,
+                verbose = TRUE)
+FindTopicsNumber_plot(rev_5_ntop)
+save(rev_5_ntop, file = "../data-raw/rev_5_ntop.rda")
 ```
