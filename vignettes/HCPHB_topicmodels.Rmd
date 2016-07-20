@@ -121,6 +121,8 @@ Two interesting points with this first analysis. First is that REV has nearly 2,
 
 ### Topic models
 
+#### Number of topics
+
 Before digging too far into the substance of topics, we need to know how many topics to model. To do so, we use the `ldatuning` package to test a range of values for the different handbook versions and sentence sizes. Because the "documents" are arbitrarily defined as 5 or 10 sentences each, we need to check both combinations. First, the 10-sentence documents:
 
 ```{r}
@@ -183,3 +185,6 @@ save(rev_5_ntop, file = "../data-raw/rev_5_ntop.rda")
 
 There is a bit more variation here than for 10-sentence, but using 90 topics is probably a good compromise. (Not sure why the differences are more apparent than with the 10-sentence documents, but it may be that five sentences undersamples the documents.)
 
+#### Topics
+
+Actually, because of some of the logistics of rendering these documents, the actual analyses of topics will be in a dedicted notebook, where I can explore a bit more.
