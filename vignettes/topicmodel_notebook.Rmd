@@ -6,9 +6,10 @@ output: html_notebook
 
 This is my first test with Rmd notebooks, and am looking at it as an alternative to notes in, e.g., Evernote. A bunch of code is copied-and-pasted from the history, because I was exploring in the console while the big test of optimal K for LDA was running.
 
-```{r setup, include = FALSE}
+```{r setup, include = FALSE, cache=TRUE}
 # library(broom)
 library(dplyr)
+library(ggplot2)
 library(hcphb)
 # library(ldatuning)
 library(readr)
@@ -160,7 +161,7 @@ So there is a statistically significant correlation between the presence-absence
 w_DTM_mat <- as.matrix(w_DTM)
 w_cor_mat <- cor(t(w_DTM_mat))
 for_hist <- data.frame(cor = w_cor_mat[w_cor_mat < 1])
-qplot(data = for_hist, x = cor, geom = "histogram", bins = 7) + 
+ggplot2::qplot(data = for_hist, x = cor, geom = "histogram", bins = 7) + 
   ggthemes::theme_hc()
 ```
 
