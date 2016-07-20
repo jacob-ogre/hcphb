@@ -7,10 +7,10 @@ output: html_notebook
 This is my first test with Rmd notebooks, and am looking at it as an alternative to notes in, e.g., Evernote. A bunch of code is copied-and-pasted from the history, because I was exploring in the console while the big test of optimal K for LDA was running.
 
 ```{r setup, include = FALSE}
-library(broom)
+# library(broom)
 library(dplyr)
 library(hcphb)
-library(ldatuning)
+# library(ldatuning)
 library(readr)
 library(stringr)
 library(tm)
@@ -180,9 +180,9 @@ ggplot(data=cor_mat, aes(x = X1, y = X2)) +
 As expected, the patterns here (e.g., topics 1 & 15, 12 & 17) are captured in the dendrogram. Note that even the strongest correlations are still relatively weak: the correlation for 1 & 15 is just 0.18. Whether this speaks to the power of separation of topics from LDA or a weakness because topics are so different is unclear. Actually...beyond the correlation matrix, there's a role here for PCA. In theory, LDA will find K unique topics from the corpus. If analyzed with PCA, we should have 25 maximally orthogonal dimensions.
 
 ```{r}
-top_pca <- FactoMineR::PCA(t(w_DTM_mat))
-eig <- data.frame(top_pca$eig)
-plot(eig$percentage.of.variance, type = "b")
+# top_pca <- FactoMineR::PCA(t(w_DTM_mat))
+# eig <- data.frame(top_pca$eig)
+# plot(eig$percentage.of.variance, type = "b")
 ```
 
 #### Interim conclusion
