@@ -197,21 +197,50 @@ There is probably some utility in examining the similarities of topics as done a
 __So this is going to take more "doing" than I feel like I have time for at the moment...__
 
 ```{r}
-setDict("/usr/local/Cellar/wordnet/3.1/dict")
-tmp <- z$Topic.1
-res <- list()
-for(i in 1:length(tmp)) {
-  print(paste(i, tmp[i]))
-  res[[i]] <- NA
-  filt <- getTermFilter("ExactMatchFilter", tmp[i], TRUE)
-  term <- getIndexTerms(c("NOUN", "VERB"), 5, filt)
-  if(identical(term, NULL)) {
-    res[[i]] <- NA
-  } else {
-    for(j in length(term)) {
-      res[[i]] <- c(res[[i]], getSynonyms(term[[j]]))
-    }
-  }
-}
+# setDict("/usr/local/Cellar/wordnet/3.1/dict")
+# tmp <- z$Topic.1
+# res <- list()
+# for(i in 1:length(tmp)) {
+#   print(paste(i, tmp[i]))
+#   res[[i]] <- NA
+#   filt <- getTermFilter("ExactMatchFilter", tmp[i], TRUE)
+#   term <- getIndexTerms(c("NOUN", "VERB"), 5, filt)
+#   if(identical(term, NULL)) {
+#     res[[i]] <- NA
+#   } else {
+#     for(j in length(term)) {
+#       res[[i]] <- c(res[[i]], getSynonyms(term[[j]]))
+#     }
+#   }
+# }
 ```
 
+## Topics @ K = 90
+```{r}
+# Ks <- c(90)
+dtms <- c(cur_10_DTM_slim,
+          rev_10_DTM_slim,
+          cur_5_DTM_slim,
+          rev_5_DTM_slim)
+topics_90_lda <- mclapply(dtms,
+                   LDA,
+                   k = 90,
+                   method = "Gibbs",
+                   control = list(seed = 742,
+                                  burnin = 1000,
+                                  thin = 100,
+                                  iter = 1000),
+                   mc.cores = 4)
+save(topics_90_lda, file = "topics_90_lda.rda")
+# z <- data.frame(terms(test[[1]], 30), stringsAsFactors = FALSE)
+# head(z)
+# w <- as.list(z)
+# w <- lapply(w, paste, collapse = " ")
+# w[[1]]
+# w_corp <- VCorpus(VectorSource(w))
+# w_DTM <- DocumentTermMatrix(w_corp)
+# dim(w_DTM)
+# w_dist <- dist(w_DTM)
+# head(w_dist)
+# plot(hclust(w_dist))
+```
