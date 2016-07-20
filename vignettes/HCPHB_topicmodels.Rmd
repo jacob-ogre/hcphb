@@ -134,7 +134,7 @@ cur_10_ntop <- FindTopicsNumber(cur_10_DTM_slim,
                 burnin = 1000,
                 thin = 100,
                 iter = 1000),
-                mc.cores = 2L,
+                mc.cores = 6L,
                 verbose = TRUE)
 FindTopicsNumber_plot(cur_10_ntop)
 save(cur_10_ntop, file = "../data-raw/cur_10_ntop.rda")
@@ -147,7 +147,7 @@ rev_10_ntop <- FindTopicsNumber(rev_10_DTM_slim,
                 burnin = 1000,
                 thin = 100,
                 iter = 1000),
-                mc.cores = 2L,
+                mc.cores = 6L,
                 verbose = TRUE)
 FindTopicsNumber_plot(rev_10_ntop)
 save(rev_10_ntop, file = "../data-raw/rev_10_ntop.rda")
@@ -164,7 +164,7 @@ cur_5_ntop <- FindTopicsNumber(cur_5_DTM_slim,
                 burnin = 1000,
                 thin = 100,
                 iter = 1000),
-                mc.cores = 2L,
+                mc.cores = 6L,
                 verbose = TRUE)
 FindTopicsNumber_plot(cur_5_ntop)
 save(cur_5_ntop, file = "../data-raw/cur_5_ntop.rda")
@@ -177,7 +177,7 @@ rev_5_ntop <- FindTopicsNumber(rev_5_DTM_slim,
                 burnin = 1000,
                 thin = 100,
                 iter = 1000),
-                mc.cores = 2L,
+                mc.cores = 6L,
                 verbose = TRUE)
 FindTopicsNumber_plot(rev_5_ntop)
 save(rev_5_ntop, file = "../data-raw/rev_5_ntop.rda")
