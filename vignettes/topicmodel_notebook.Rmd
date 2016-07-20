@@ -16,7 +16,7 @@ library(stringr)
 library(tm)
 library(topicmodels)
 library(viridis)
-library(wordnet)
+# library(wordnet)
 
 data("hcp_rev_sent")
 data("hcp_cur_sent")
