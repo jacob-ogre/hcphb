@@ -168,14 +168,14 @@ ggplot2::qplot(data = for_hist, x = cor, geom = "histogram", bins = 7) +
 We see that most correlations are centered around zero, so even though the clusters appear in the dendrogram, there's not a whole lot of separation. And the correlations as a heatmap:
 
 ```{r}
-cor_mat <- reshape::melt(w_cor_mat)
-cor_mat <- filter(cor_mat, value < 1)
-ggplot(data=cor_mat, aes(x = X1, y = X2)) +
-  geom_tile(aes(fill = value)) +
-  labs(x = "Topic",
-       y = "Topic") +
-  scale_fill_viridis() +
-  theme_bw()
+# cor_mat <- reshape::melt(w_cor_mat)
+# cor_mat <- filter(cor_mat, value < 1)
+# ggplot(data=cor_mat, aes(x = X1, y = X2)) +
+#   geom_tile(aes(fill = value)) +
+#   labs(x = "Topic",
+#        y = "Topic") +
+#   scale_fill_viridis() +
+#   theme_bw()
 ```
 
 As expected, the patterns here (e.g., topics 1 & 15, 12 & 17) are captured in the dendrogram. Note that even the strongest correlations are still relatively weak: the correlation for 1 & 15 is just 0.18. Whether this speaks to the power of separation of topics from LDA or a weakness because topics are so different is unclear. Actually...beyond the correlation matrix, there's a role here for PCA. In theory, LDA will find K unique topics from the corpus. If analyzed with PCA, we should have 25 maximally orthogonal dimensions.
