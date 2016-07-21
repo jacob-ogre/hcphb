@@ -219,11 +219,8 @@ __So this is going to take more "doing" than I feel like I have time for at the 
 
 ## Topics @ K = 90
 ```{r}
-# Ks <- c(90)
 dtms <- c(cur_10_DTM_slim,
-          rev_10_DTM_slim,
-          cur_5_DTM_slim,
-          rev_5_DTM_slim)
+          rev_10_DTM_slim)
 res <- list()
 for(i in 1:length(dtms)) {
   res[[i]] <- LDA(x = dtms[[i]], k = 90, method = "Gibbs",
