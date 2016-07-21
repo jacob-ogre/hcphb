@@ -6,7 +6,7 @@ output: html_notebook
 
 This is my first test with Rmd notebooks, and am looking at it as an alternative to notes in, e.g., Evernote. A bunch of code is copied-and-pasted from the history, because I was exploring in the console while the big test of optimal K for LDA was running.
 
-```{r setup, include = FALSE, cache=TRUE}
+```{r setup, include = FALSE}
 # library(broom)
 library(dplyr)
 library(ggplot2)
