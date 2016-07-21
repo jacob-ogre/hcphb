@@ -229,6 +229,18 @@ for(i in 1:length(dtms)) {
 }
 topics_90_lda <- res
 save(topics_90_lda, file = "topics_90_lda.rda")
+
+dtms <- c(cur_10_DTM_slim,
+          rev_10_DTM_slim)
+res <- list()
+for(i in 1:length(dtms)) {
+  res[[i]] <- CTM(x = dtms[[i]], k = 90, method = "Gibbs",
+                  control = list(seed = 742, burnin = 1000, thin = 100,
+                                 iter = 1000))
+}
+topics_90_ctm <- res
+save(topics_90_ctm, file = "topics_90_ctm.rda")
+
 # z <- data.frame(terms(test[[1]], 30), stringsAsFactors = FALSE)
 # head(z)
 # w <- as.list(z)
