@@ -124,27 +124,27 @@ First we do LDA with k = 25 and 50, then focus on k = 25 to compare topics. One 
 
 ```{r}
 # # Uncomment the block below to-rerun analysis.
-Ks <- c(25)
-test <- parallel::mclapply(Ks,
-            LDA,
-            x = cur_10_DTM_slim,
-            method = "Gibbs",
-            control = list(seed = 742,
-                           burnin = 1000,
-                           thin = 100,
-                           iter = 1000),
-            mc.cores = 2)
-z <- data.frame(terms(test[[1]], 30), stringsAsFactors = FALSE)
-head(z)
-w <- as.list(z)
-w <- lapply(w, paste, collapse = " ")
-w[[1]]
-w_corp <- VCorpus(VectorSource(w))
-w_DTM <- DocumentTermMatrix(w_corp)
-dim(w_DTM)
-w_dist <- dist(w_DTM)
-head(w_dist)
-plot(hclust(w_dist))
+# Ks <- c(25)
+# test <- parallel::mclapply(Ks,
+#             LDA,
+#             x = cur_10_DTM_slim,
+#             method = "Gibbs",
+#             control = list(seed = 742,
+#                            burnin = 1000,
+#                            thin = 100,
+#                            iter = 1000),
+#             mc.cores = 2)
+# z <- data.frame(terms(test[[1]], 30), stringsAsFactors = FALSE)
+# head(z)
+# w <- as.list(z)
+# w <- lapply(w, paste, collapse = " ")
+# w[[1]]
+# w_corp <- VCorpus(VectorSource(w))
+# w_DTM <- DocumentTermMatrix(w_corp)
+# dim(w_DTM)
+# w_dist <- dist(w_DTM)
+# head(w_dist)
+# plot(hclust(w_dist))
 ```
 
 Based on this simple approach, it looks like there are six clusters of topics. We can compare the lists of some pairs of topics to see if they make sense:
@@ -219,27 +219,39 @@ __So this is going to take more "doing" than I feel like I have time for at the 
 
 ## Topics @ K = 90
 ```{r}
-dtms <- c(cur_10_DTM_slim,
-          rev_10_DTM_slim)
-res <- list()
-for(i in 1:length(dtms)) {
-  res[[i]] <- LDA(x = dtms[[i]], k = 90, method = "Gibbs",
-                  control = list(seed = 742, burnin = 1000, thin = 100,
-                                 iter = 1000))
-}
-topics_90_lda <- res
-save(topics_90_lda, file = "topics_90_lda.rda")
+cur_10_lda_90 <- LDA(x = cur_10_DTM_slim, 
+                     k = 90, 
+                     method = "Gibbs",
+                     control = list(seed = 742, 
+                                    burnin = 1000, 
+                                    thin = 100,
+                                    iter = 1000))
+save(cur_10_lda_90, file = "cur_10_lda_90.rda")
 
-dtms <- c(cur_10_DTM_slim,
-          rev_10_DTM_slim)
-res <- list()
-for(i in 1:length(dtms)) {
-  res[[i]] <- CTM(x = dtms[[i]], k = 90, method = "Gibbs",
-                  control = list(seed = 742, burnin = 1000, thin = 100,
-                                 iter = 1000))
-}
-topics_90_ctm <- res
-save(topics_90_ctm, file = "topics_90_ctm.rda")
+rev_10_lda_90 <- LDA(x = rev_10_DTM_slim, 
+                     k = 90, 
+                     method = "Gibbs",
+                     control = list(seed = 742, 
+                                    burnin = 1000, 
+                                    thin = 100,
+                                    iter = 1000))
+save(rev_10_lda_90, file = "rev_10_lda_90.rda")
+
+cur_10_ctm_90 <- CTM(x = cur_10_DTM_slim, 
+                     k = 90, method = "Gibbs",
+                     control = list(seed = 742, 
+                                    burnin = 1000, 
+                                    thin = 100,
+                                    iter = 1000))
+save(cur_10_ctm_90, file = "cur_10_ctm_90.rda")
+
+rev_10_ctm_90 <- CTM(x = rev_10_DTM_slim, 
+                     k = 90, method = "Gibbs",
+                     control = list(seed = 742, 
+                                    burnin = 1000, 
+                                    thin = 100,
+                                    iter = 1000))
+save(rev_10_ctm_90, file = "rev_10_ctm_90.rda")
 
 # z <- data.frame(terms(test[[1]], 30), stringsAsFactors = FALSE)
 # head(z)
