@@ -219,38 +219,32 @@ __So this is going to take more "doing" than I feel like I have time for at the 
 
 ## Topics @ K = 90
 ```{r}
-cur_10_lda_90 <- LDA(x = cur_10_DTM_slim, 
-                     k = 90, 
-                     method = "Gibbs",
-                     control = list(seed = 742, 
-                                    burnin = 1000, 
-                                    thin = 100,
-                                    iter = 1000))
-save(cur_10_lda_90, file = "cur_10_lda_90.rda")
-
-rev_10_lda_90 <- LDA(x = rev_10_DTM_slim, 
-                     k = 90, 
-                     method = "Gibbs",
-                     control = list(seed = 742, 
-                                    burnin = 1000, 
-                                    thin = 100,
-                                    iter = 1000))
-save(rev_10_lda_90, file = "rev_10_lda_90.rda")
+# cur_10_lda_90 <- LDA(x = cur_10_DTM_slim, 
+#                      k = 90, 
+#                      method = "Gibbs",
+#                      control = list(seed = 742, 
+#                                     burnin = 1000, 
+#                                     thin = 100,
+#                                     iter = 1000))
+# save(cur_10_lda_90, file = "cur_10_lda_90.rda")
+# 
+# rev_10_lda_90 <- LDA(x = rev_10_DTM_slim, 
+#                      k = 90, 
+#                      method = "Gibbs",
+#                      control = list(seed = 742, 
+#                                     burnin = 1000, 
+#                                     thin = 100,
+#                                     iter = 1000))
+# save(rev_10_lda_90, file = "rev_10_lda_90.rda")
 
 cur_10_ctm_90 <- CTM(x = cur_10_DTM_slim, 
                      k = 90, method = "VEM",
-                     control = list(seed = 742, 
-                                    burnin = 1000, 
-                                    thin = 100,
-                                    iter = 1000))
+                     control = list(seed = 742))
 save(cur_10_ctm_90, file = "cur_10_ctm_90.rda")
 
 rev_10_ctm_90 <- CTM(x = rev_10_DTM_slim, 
                      k = 90, method = "VEM",
-                     control = list(seed = 742, 
-                                    burnin = 1000, 
-                                    thin = 100,
-                                    iter = 1000))
+                     control = list(seed = 742))
 save(rev_10_ctm_90, file = "rev_10_ctm_90.rda")
 
 # z <- data.frame(terms(test[[1]], 30), stringsAsFactors = FALSE)
