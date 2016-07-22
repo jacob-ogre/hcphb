@@ -123,28 +123,28 @@ And that holds after filtering the low-frequency terms.
 First we do LDA with k = 25 and 50, then focus on k = 25 to compare topics. One way to do topic comparison is by converting the words associated with each topic into a document-term matrix (DTM; with topic ~ document), then calculating distances (euclidean by default) from the DTM:
 
 ```{r}
-# # Uncomment the block below to-rerun analysis.
-# Ks <- c(25)
-# test <- parallel::mclapply(Ks,
-#             LDA,
-#             x = cur_10_DTM_slim,
-#             method = "Gibbs",
-#             control = list(seed = 742,
-#                            burnin = 1000,
-#                            thin = 100,
-#                            iter = 1000),
-#             mc.cores = 2)
-# z <- data.frame(terms(test[[1]], 30), stringsAsFactors = FALSE)
-# head(z)
-# w <- as.list(z)
-# w <- lapply(w, paste, collapse = " ")
-# w[[1]]
-# w_corp <- VCorpus(VectorSource(w))
-# w_DTM <- DocumentTermMatrix(w_corp)
-# dim(w_DTM)
-# w_dist <- dist(w_DTM)
-# head(w_dist)
-# plot(hclust(w_dist))
+# Uncomment the block below to-rerun analysis.
+Ks <- c(25)
+test <- parallel::mclapply(Ks,
+            LDA,
+            x = cur_10_DTM_slim,
+            method = "Gibbs",
+            control = list(seed = 742,
+                           burnin = 1000,
+                           thin = 100,
+                           iter = 1000),
+            mc.cores = 2)
+z <- data.frame(terms(test[[1]], 30), stringsAsFactors = FALSE)
+head(z)
+w <- as.list(z)
+w <- lapply(w, paste, collapse = " ")
+w[[1]]
+w_corp <- VCorpus(VectorSource(w))
+w_DTM <- DocumentTermMatrix(w_corp)
+dim(w_DTM)
+w_dist <- dist(w_DTM)
+head(w_dist)
+plot(hclust(w_dist))
 ```
 
 Based on this simple approach, it looks like there are six clusters of topics. We can compare the lists of some pairs of topics to see if they make sense:
