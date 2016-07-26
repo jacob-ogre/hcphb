@@ -246,16 +246,58 @@ rev_10_ctm_90 <- CTM(x = rev_10_DTM_slim,
                      k = 90, method = "VEM",
                      control = list(seed = 742))
 save(rev_10_ctm_90, file = "rev_10_ctm_90.rda")
+```
 
-# z <- data.frame(terms(test[[1]], 30), stringsAsFactors = FALSE)
-# head(z)
-# w <- as.list(z)
-# w <- lapply(w, paste, collapse = " ")
-# w[[1]]
-# w_corp <- VCorpus(VectorSource(w))
-# w_DTM <- DocumentTermMatrix(w_corp)
-# dim(w_DTM)
-# w_dist <- dist(w_DTM)
-# head(w_dist)
-# plot(hclust(w_dist))
+```{r}
+load("rev_10_lda_90.rda")
+load("cur_10_lda_90.rda")
+rev_top30 <- data.frame(topicmodels::terms(rev_10_lda_90, 30), 
+                        stringsAsFactors = FALSE)
+names(rev_top30) <- paste0("rev_", names(rev_top30))
+cur_top30 <- data.frame(topicmodels::terms(cur_10_lda_90, 30), 
+                        stringsAsFactors = FALSE)
+names(cur_top30) <- paste0("cur_", names(cur_top30))
+top30 <- cbind(rev_top30, cur_top30)
+
+# Now convert to a df to get the DTM
+top30_ls <- as.list(top30)
+top30_cat <- lapply(top30_ls, paste, collapse = " ")
+top30_cat[[1]]
+top30_corp <- VCorpus(VectorSource(top30_cat))
+top30_dtm <- DocumentTermMatrix(top30_corp)
+dim(top30_dtm)
+top30_dist <- dist(top30_dtm)
+plot(hclust(top30_dist))
+plot(hclust(top30_dist), hang = -1)
+top30_mat <- as.matrix(top30_dist)
+
+nam <- colnames(top30_mat)
+cut <- 7
+res <- data.frame(r = NA, c = NA, val = NA)
+for(i in 1:length(nam)) {
+  for(j in 1:length(nam)) {
+    if(j < i) {
+      if(top30_mat[i, j] < cut & top30_mat[i, j] > 0) {
+        dat <- c(r = nam[i], c = nam[j], val = top30_mat[i, j])
+        res <- rbind(res, dat)
+      }
+    }
+  }
+}
+res <- res[-1, ]
+dim(res)
+
+rev_topic_assign <- topics(rev_10_lda_90)
+rev_T64 <- rev_topic_assign[rev_topic_assign == 64]
+rev_T64_blk <- rev_10[as.numeric(names(rev_T64))]
+rev_towrite <- paste(unlist(rev_T64_blk), collapse = "\n\n")
+write(rev_towrite, file = "rev_topic64_chunks.txt")
+
+cur_topic_assign <- topics(cur_10_lda_90)
+cur_T19 <- cur_topic_assign[cur_topic_assign == 19]
+cur_T19_blk <- cur_10[as.numeric(names(cur_T19))]
+cur_towrite <- paste(unlist(cur_T19_blk), collapse = "\n\n")
+write(cur_towrite, file = "cur_topic19_chunks.txt")
+
+
 ```
