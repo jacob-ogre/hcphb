@@ -298,6 +298,9 @@ cur_T19 <- cur_topic_assign[cur_topic_assign == 19]
 cur_T19_blk <- cur_10[as.numeric(names(cur_T19))]
 cur_towrite <- paste(unlist(cur_T19_blk), collapse = "\n\n")
 write(cur_towrite, file = "cur_topic19_chunks.txt")
+```
 
-
+```{r uncertainty}
+cur_uncert <- cur_10[grep(cur_10, pattern = "uncertain")]
+rev_uncert <- rev_10[grep(rev_10, pattern = "uncertain")]
 ```
