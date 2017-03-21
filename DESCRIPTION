@@ -17,7 +17,8 @@ Imports:
     dplyr,
     pdftools,
     stringdist,
-    stringr
+    stringr,
+    topicmodels
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
